@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+
+<html>
+
+<body>
+    </div>
+    X:<select id="xSelect"></select>
+    Y1:<select id="y1Select"></select>
+    Y2:<select id="y2Select"></select>
+    </div>
+
+    <div id="chart_container"></div>
+
+    <table id="measpointlist_table">
+        <thead>
+            <tr id="measpointlist_tableheader">
+            </tr>
+        </thead>
+        <tbody id="measpointlist_tablebody"></tbody>
+    </table>
+
+    <script src="d3.v7.js"></script>
+    <!--<script src="https://d3js.org/d3.v4.js"></script>-->
+
+    <script>
+        // set the dimensions and margins of the graph
+        var margin = { top: 10, right: 30, bottom: 30, left: 60 };
+        var width = 800 - margin.left - margin.right;
+        var height = 400 - margin.top - margin.bottom;
+
+        // append the svg object to the body of the page
+        var svg = d3.select("#chart_container")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform",
+                "translate(" + margin.left + "," + margin.top + ")");
+
+
+        var data = d3.csvParse("Time,Volume,Drift,Temperature\n0.3,12.5,0.5,25.6\n0.6,11.1,0.45,25.3\n0.9,10.5,0.40,25.3\n1.2,10.1,0.41,25.3\n1.5,9.9,0.36,25.6\n1.8,9.8,0.33,25.4")
+
+        var column_info = {
+            "Time": {
+                "range": [0.1, 2.0],
+              //  "values": [0.3, 0.6, 0.9, 1.2, 1.5, 1.8],
+                "unit": "s"
+            },
+            "Volume": {
+                "range": [9.0, 13.0],
+            //    "values": [12.5, 11.1, 10.5, 10.1, 9.9, 9.8],
+                "unit": "ml"
+            },
+            "Drift": {
+                "range": [0.3, 0.55],
+            //    "values": [0.5, 0.45, 0.4, 0.41, 0.36, 0.33],
+                "unit": "mV/s"
+            },
+            "Temperature": {
+                "range": [24.0, 27.0],
+            //    "values": [25.5, 25.3, 25.3, 26.6, 25.4],
+                "unit": "°C"
+            },
+        }
+
+        d3.selectAll("Select")
+            .selectAll('myOptions')
+            .data(data.columns)
+            .enter()
+            .append('option')
+            .text(function (d) { return d; })
+            .attr("value", function (d) { return d; }) // corresponding value returned by the button
+
+        var xSelect = document.getElementById('xSelect');
+        var y1Select = document.getElementById('y1Select');
+        var y2Select = document.getElementById('y2Select');
+
+        xSelect.selectedIndex = 0
+        y1Select.selectedIndex = 3
+        y2Select.selectedIndex = 1
+
+
+
+        // Add X axis
+        var x = d3.scaleLinear()
+            .domain(column_info[xSelect.value]["range"])
+            .range([0, width]);
+        var xAxis = svg.append("g")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(x));
+
+        // Add Y1 axis
+        var y1 = d3.scaleLinear()
+            .domain(column_info[y1Select.value]["range"])
+            .range([height, 0]);
+        var y1Axis = svg.append("g")
+            .call(d3.axisLeft(y1))
+
+        y1Axis.selectAll("path,line")
+            .style("stroke", "steelblue");
+
+        // Add Y2 axis
+        var y2 = d3.scaleLinear()
+            .domain(column_info[y2Select.value]["range"])
+            .range([height, 0]);
+        var y2Axis = svg.append("g")
+            .attr("transform", "translate(" + width + ",0)")
+            .call(d3.axisRight(y2));
+        y2Axis.selectAll("path,line")
+            .style("stroke", "forestgreen");
+
+        // Add the Y1 line
+        y1Path = svg.append("path")
+            .datum(data)
+            .attr("fill", "none")
+            .attr("stroke", "steelblue")
+            .attr("stroke-width", 1.5)
+
+        // Add the Y2 line
+        y2Path = svg.append("path")
+            .datum(data)
+            .attr("fill", "none")
+            .attr("stroke", "forestgreen")
+            .attr("stroke-width", 1.5)
+
+        function updateY1() {
+            // adjust axis
+            y1 = y1.domain(column_info[y1Select.value]["range"])
+            y1Axis.transition().duration(300).call(d3.axisLeft(y1))
+
+            // adjust line series
+            y1Path
+                .transition()
+                .duration(500)
+                .attr("d", d3.line()
+                    .x(function (d) { return x(+d[xSelect.value]) })
+                    .y(function (d) { return y1(+d[y1Select.value]) })
+                )
+        }
+
+        function updateY2() {
+            // adjust axis
+            y2 = y2.domain(column_info[y2Select.value]["range"])
+            y2Axis.transition().duration(300).call(d3.axisRight(y2))
+
+            // adjust line series
+            y2Path
+                .transition()
+                .duration(500)
+                .attr("d", d3.line()
+                    .x(function (d) { return x(+d[xSelect.value]) })
+                    .y(function (d) { return y2(+d[y2Select.value]) })
+                )
+        }
+
+        xSelect.onchange = function () {
+            console.log("X Axis changed: " + xSelect.value)
+
+            x = x.domain(column_info[xSelect.value]["range"])
+            xAxis.transition().duration(300).call(d3.axisBottom(x))
+
+            updateY1()
+            updateY2()
+        }
+
+        y1Select.onchange = function () {
+            console.log("Y1 Axis changed: " + y1Select.value)
+            updateY1()
+        }
+
+        y2Select.onchange = function () {
+            console.log("Y2 Axis changed: " + y2Select.value)
+            updateY2()
+        }
+
+        updateY1()
+        updateY2()
+
+        function loadTableData() {
+            const tableheader = document.getElementById("measpointlist_tableheader");
+
+            data.columns.forEach(column => {
+                var cell = tableheader.insertCell();
+                cell.innerHTML = column + " / " + column_info[column]["unit"]
+            })
+
+            const table = document.getElementById("measpointlist_tablebody");
+            data.forEach(item => {
+                var row = table.insertRow();
+                data.columns.forEach(column => {
+                    var cell = row.insertCell();
+                    cell.innerHTML = item[column]
+                })
+            });
+        }
+
+        loadTableData(data);
+
+    </script>
+
+</body>
+
+</html>
