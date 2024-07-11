@@ -2,6 +2,10 @@
 
 <html>
 
+<head>
+    <title>Result demo page</title>
+</head>
+
 <body>
     </div>
     X:<select id="xSelect"></select>
@@ -24,48 +28,50 @@
     <script src="resultlists.js"></script>
 
     <script>
+        "use strict";
+        
         // set the dimensions and margins of the graph
         let margin = { top: 10, right: 30, bottom: 30, left: 60 };
         let width = 800 - margin.left - margin.right;
         let height = 400 - margin.top - margin.bottom;
 
 
-        let data = d3.csvParse("Time,Volume,Drift,Temperature\n0.3,12.5,0.5,25.6\n0.6,11.1,0.45,26.3\n0.9,10.5,0.40,25.3\n1.2,10.1,0.41,25.3\n1.5,9.9,0.36,25.6\n1.8,9.8,0.33,25.4")
+        let data_ = d3.csvParse("Time,Volume,Drift,Temperature\n0.3,12.5,0.5,25.6\n0.6,11.1,0.45,26.3\n0.9,10.5,0.40,25.3\n1.2,10.1,0.41,25.3\n1.5,9.9,0.36,25.6\n1.8,9.8,0.33,25.4")
 
-        let column_info = {
+        let column_info_ = {
             "Time": {
-                "range": [0.1, 2.0],
-              //  "values": [0.3, 0.6, 0.9, 1.2, 1.5, 1.8],
+                range: [0.1, 2.0],
+                //  "values": [0.3, 0.6, 0.9, 1.2, 1.5, 1.8],
                 unit: "s"
             },
             "Volume": {
-                "range": [9.0, 13.0],
-            //    "values": [12.5, 11.1, 10.5, 10.1, 9.9, 9.8],
+                range: [9.0, 13.0],
+                //    "values": [12.5, 11.1, 10.5, 10.1, 9.9, 9.8],
                 unit: "ml"
             },
             "Drift": {
-                "range": [0.3, 0.55],
-            //    "values": [0.5, 0.45, 0.4, 0.41, 0.36, 0.33],
+                range: [0.3, 0.55],
+                //    "values": [0.5, 0.45, 0.4, 0.41, 0.36, 0.33],
                 unit: "mV/s"
             },
             "Temperature": {
-                "range": [24.0, 27.0],
-            //    "values": [25.5, 25.3, 25.3, 26.6, 25.4],
+                range: [24.0, 27.0],
+                //    "values": [25.5, 25.3, 25.3, 26.6, 25.4],
                 unit: "°C"
             },
         }
 
         // append the svg object to the body of the page
-        let context = initializeChart("chart_container", width, height, margin)
+        let context = initializeChart("chart_container", width, height, margin, data_, column_info_)
 
-        initializeSelects(context, ["xSelect", "y1Select", "y2Select"], data.columns)
+        initializeSelects(context, ["xSelect", "y1Select", "y2Select"])
 
         initializeAxis(context)
-        
+
         updateY1(context)
         updateY2(context)
 
-        fillResultListTable(data, "measpointlist_tableheader", "measpointlist_tablebody")
+        fillResultListTable(context, "measpointlist_tableheader", "measpointlist_tablebody")
     </script>
 
 </body>

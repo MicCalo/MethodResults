@@ -1,5 +1,7 @@
-function initializeChart(chartContainerName, width, height, margin) {
+function initializeChart(chartContainerName, width, height, margin, data, column_info) {
     let context = Object()
+    context.data = data;
+    context.column_info = column_info;
 
     let svg = d3.select("#" + chartContainerName)
         .append("svg")
@@ -13,10 +15,10 @@ function initializeChart(chartContainerName, width, height, margin) {
     return context
 }
 
-function initializeSelects(context, selectNames, columnNames) {
+function initializeSelects(context, selectNames) {
     d3.selectAll("Select")
         .selectAll('myOptions')
-        .data(columnNames)
+        .data(context.data.columns)
         .enter()
         .append('option')
         .text(function (d) { return d; })
@@ -33,7 +35,7 @@ function initializeSelects(context, selectNames, columnNames) {
     context.xSelect.onchange = function () {
         console.log("X Axis changed: " + context.xSelect.value)
 
-        context.x = context.x.domain(column_info[context.xSelect.value]["range"])
+        context.x = context.x.domain(context.column_info[context.xSelect.value].range)
         context.xAxis.transition().duration(300).call(d3.axisBottom(context.x))
 
         updateY1(context)
@@ -54,7 +56,7 @@ function initializeSelects(context, selectNames, columnNames) {
 function initializeAxis(context) {
     // Add X axis
     context.x = d3.scaleLinear()
-        .domain(column_info[context.xSelect.value]["range"])
+        .domain(context.column_info[context.xSelect.value].range)
         .range([0, width]);
     context.xAxis = context.svg.append("g")
         .attr("transform", "translate(0," + height + ")")
@@ -62,7 +64,7 @@ function initializeAxis(context) {
 
     // Add Y1 axis
     context.y1 = d3.scaleLinear()
-        .domain(column_info[context.y1Select.value]["range"])
+        .domain(context.column_info[context.y1Select.value].range)
         .range([height, 0]);
     context.y1Axis = context.svg.append("g")
         .call(d3.axisLeft(context.y1))
@@ -72,7 +74,7 @@ function initializeAxis(context) {
 
     // Add Y2 axis
     context.y2 = d3.scaleLinear()
-        .domain(column_info[context.y2Select.value]["range"])
+        .domain(context.column_info[context.y2Select.value].range)
         .range([height, 0]);
     context.y2Axis = context.svg.append("g")
         .attr("transform", "translate(" + width + ",0)")
@@ -82,14 +84,14 @@ function initializeAxis(context) {
 
     // Add the Y1 line
     context.y1Path = context.svg.append("path")
-        .datum(data)
+        .datum(context.data)
         .attr("fill", "none")
         .attr("stroke", "steelblue")
         .attr("stroke-width", 1.5)
 
     // Add the Y2 line
     context.y2Path = context.svg.append("path")
-        .datum(data)
+        .datum(context.data)
         .attr("fill", "none")
         .attr("stroke", "forestgreen")
         .attr("stroke-width", 1.5)
@@ -97,7 +99,7 @@ function initializeAxis(context) {
 
 function updateY1(context) {
     // adjust axis
-    context.y1 = context.y1.domain(column_info[context.y1Select.value]["range"])
+    context.y1 = context.y1.domain(context.column_info[context.y1Select.value].range)
     context.y1Axis.transition().duration(300).call(d3.axisLeft(context.y1))
 
     // adjust line series
@@ -112,7 +114,7 @@ function updateY1(context) {
 
 function updateY2(context) {
     // adjust axis
-    context.y2 = context.y2.domain(column_info[context.y2Select.value]["range"]);
+    context.y2 = context.y2.domain(context.column_info[context.y2Select.value].range);
     context.y2Axis.transition().duration(300).call(d3.axisRight(context.y2));
 
     // adjust line series
@@ -125,18 +127,18 @@ function updateY2(context) {
         );
 }
 
-function fillResultListTable(data, tableHeaderName, tableBodName) {
+function fillResultListTable(context, tableHeaderName, tableBodName) {
     const tableHeader = document.getElementById(tableHeaderName);
 
-    data.columns.forEach(column => {
+    context.data.columns.forEach(column => {
         var cell = tableHeader.insertCell();
-        cell.innerHTML = column + " / " + column_info[column].unit
+        cell.innerHTML = column + " / " + context.column_info[column].unit
     });
 
     const table = document.getElementById(tableBodName);
-    data.forEach(item => {
+    context.data.forEach(item => {
         var row = table.insertRow();
-        data.columns.forEach(column => {
+        context.data.columns.forEach(column => {
             var cell = row.insertCell();
             cell.innerHTML = item[column]
         })
